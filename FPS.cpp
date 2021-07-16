@@ -1,13 +1,12 @@
 //FPSのソースファイル
 
-//ヘッダーファイルの読み込み
-#include"FPS.h"
+//ヘッダファイル読み込み
+#include "FPS.h"
 
 //グローバル変数
-FPS fps;
+FPS fps;	//FPSの管理
 
 //関数
-
 
 /// <summary>
 /// FPS値を計測し、値を更新する
@@ -19,7 +18,7 @@ VOID FPSUpdate(VOID)
 	if (FALSE == fps.IsInitFlg)
 	{
 		//測定開始時刻をマイクロ秒単位で取得
-		fps.StartTime = GetNowHiPerformanceCount();	//windowsが起動してから経過した時間(マイクロ秒)
+		fps.StartTime = GetNowHiPerformanceCount();	//Windowsが起動してから経過した時間(マイクロ秒)
 
 		fps.IsInitFlg = TRUE;	//フラグを立てる
 	}
@@ -33,10 +32,10 @@ VOID FPSUpdate(VOID)
 	//今回取得した時間を保存
 	fps.OldTime = fps.NowTime;
 
-	//1フレーム目～FPS設定値までは、カウントアップ
+	//１フレーム目～FPS設定値までは、カウントアップ
 	if (fps.Count < fps.SampleRate)
 	{
-		//カウントを増やす
+		//カウンタを増やす
 		fps.Count++;
 	}
 	else
@@ -48,11 +47,12 @@ VOID FPSUpdate(VOID)
 		fps.DrawValue = 1000000.f / ((fps.NowTime - fps.StartTime) / (float)fps.SampleRate);
 
 		//測定開始時刻をマイクロ秒単位で取得
-		fps.StartTime = GetNowHiPerformanceCount();	//windowsが起動してから経過した(マイクロ秒)
+		fps.StartTime = GetNowHiPerformanceCount();	//Windowsが起動してから経過した時間(マイクロ秒)
 
 		//カウンタ初期化
 		fps.Count = 1;
 	}
+
 	return;
 }
 
@@ -67,16 +67,20 @@ VOID FPSDraw(VOID)
 		//文字列を描画
 		DrawFormatString(0, GAME_HEIGHT - 20, GetColor(0, 0, 0), "FPS:%.1f", fps.DrawValue);
 	}
+
 	return;
 }
 
-
+/// <summary>
+/// FPSで処理を待つ
+/// </summary>
+/// <param name=""></param>
 VOID FPSWait(VOID)
 {
-	//現在の時刻ー最初の時刻で、現在かかっている時刻を取得する
+	//現在の時刻-最初の時刻で、現在かかっている時刻を取得する
 	LONGLONG resultTime = fps.NowTime - fps.StartTime;
 
-	//待つべきミリ秒数　（1秒/FPS値 * 現在のフレーム）から、現在かかっている時刻を引く
+	//待つべきミリ秒数　(1秒/FPS値 * 現在のフレーム数)から、現在かかっている時刻を引く
 	int waitTime = 1000000.0f / fps.Value * fps.Count - resultTime;
 
 	//マイクロ秒からミリ秒に変換
@@ -85,23 +89,21 @@ VOID FPSWait(VOID)
 	//処理が早かったら、処理を待つ
 	if (waitTime > 0)
 	{
-		WaitTimer(waitTime);		//引数ミリ秒待つ
+		WaitTimer(waitTime);	//引数ミリ秒待つ
 	}
-
-	
 
 	//垂直同期をOFFにしているか？
 	if (GetWaitVSyncFlag() == FALSE)
 	{
-
 		//FPS最大値ではないとき
 		if (fps.Value < GAME_FPS_MAX)
 		{
-			//1秒毎のFPS値よりも、待つ時間が小さいときは、もっとFPS値を上げてもよい
-			//待つ時間　10ミリ　＜＝1秒/60FPS = 16.6666ミリ　もう少し早くできる
+			//１秒毎のFPS値よりも、待つ時間が小さいときは、もっとFPS値を上げても良い
+			//待つ時間 10ミリ　<= 1秒/60FPS = 16.6666ミリ　もう少し早くできる
 			if (waitTime > 0
 				&& waitTime <= 1000.0f / fps.Value)
 			{
+				//fps.Count++;
 				fps.Value++;
 			}
 			else
@@ -114,5 +116,6 @@ VOID FPSWait(VOID)
 			}
 		}
 	}
+
 	return;
 }
