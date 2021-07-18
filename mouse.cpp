@@ -52,7 +52,11 @@ VOID MouseUpdate(VOID)
     return;
 }
 
-
+/// <summary>
+/// ボタンを押しているか、マウスコードで判断する
+/// </summary>
+/// <param name="MOUSE_INPUT_">MOUSE_INPUT_</param>
+/// <returns>ボタンを押しているならTRUE</returns>
 BOOL MouseDown(int MOUSE_INPUT_)
 {
     //マウスコードのボタンを押しているとき
@@ -66,8 +70,114 @@ BOOL MouseDown(int MOUSE_INPUT_)
     }
 }
 
-
-extern BOOL MouseUp(int MOUSE_INPUT_)
+/// <summary>
+/// ボタンを押して上げたか、マウスコードで判断する
+/// </summary>
+/// <param name="MOUSE_INPUT_">MOUSE_INPUT_</param>
+/// <returns>ボタンを押して上げたならTRUE</returns>
+ BOOL MouseUp(int MOUSE_INPUT_)
 {
-
+    if (mouse.OldButton[MOUSE_INPUT_] >= 1  //直前は押していて
+        && mouse.Button[MOUSE_INPUT_] == 0) //今は押していないとき
+    {
+        return TRUE; //ボタンを押して上げている
+    }
+    else
+    {
+        return FALSE; //ボタンを押してあげていない
+    }
 }
+
+/// <summary>
+/// ボタンを押して上げたか、マウスコードで判断する
+/// </summary>
+/// <param name="MOUSE_INPUT_">MOUSE_INPUT_</param>
+/// <param name="milliTime">ボタンを押し続けている時間（ミリ秒）</param>
+/// <returns>ボタンを押して続けていたらならTRUE</returns>
+ BOOL MouseDownKeep(int MOUSE_INPUT_, int milliTime)
+{
+    float MilliSec = 1000.0f;   //1秒は1000ミリ秒
+
+    //押し続ける時間＝秒数＊FPS値
+    int UpdateTime = (milliTime / MilliSec) * fps.Value;
+
+    if (mouse.Button[MOUSE_INPUT_] > UpdateTime)
+    {
+        return TRUE;  //押し続けている
+    }
+    else
+    {
+        return FALSE; //押し続けていない
+    }
+}
+
+/// <summary>
+/// マウスをクリックしたか、マウスコードで判断する
+/// </summary>
+/// <param name="MOUSE_INPUT_">MOUSE_INPUT_</param>
+/// <returns>クリックしたら</returns>
+ BOOL MouseClick(int MOUSE_INPUT_)
+{
+    if (mouse.OldButton[MOUSE_INPUT_] >= 1  //直前は押していて
+        && mouse.Button[MOUSE_INPUT_] == 0) //今は押していないとき
+    {
+        return TRUE; //ボタンを押して上げている
+    }
+    else
+    {
+        return FALSE; //ボタンを押してあげていない
+    }
+}
+
+/// <summary>
+/// マウスの入力情報を取得
+/// </summary>
+/// <returns></returns>
+ VOID MouseDraw(VOID)
+{
+    if (GAME_DEBUG == TRUE) //デバックモードなら
+    {
+        //マウスの座標を描画
+        DrawFormatString(0, GAME_HEIGHT - 40, GetColor(255, 255, 255), "MOUSE[X:%4d/Y:%4d]", mouse.Point.x,
+            mouse.Point.y);
+    }
+
+    return;
+}
+
+/// <summary>
+/// マウスが短形領域をクリックしたか
+/// </summary>
+/// <param name="rect">短形領域</param>
+/// <param name="MOUSE_INPUT_">マウスコード</param>
+/// <returns></returns>
+ BOOL MouseRectClick(RECT rect, int MOUSE_INPUT_)
+{
+ //点と四角の当たり判定
+    if (CheckColliPointToRect(mouse.Point, rect) == TRUE)
+    {
+        //マウスをクリックしているか？
+        return MouseClick(MOUSE_INPUT_);
+    }
+
+    return FALSE;
+}
+
+
+/// <summary>
+/// マウスが円をクリックしたか
+/// </summary>
+/// <param name="rect">円領域</param>
+/// <param name="MOUSE_INPUT_">マウスコード</param>
+/// <returns></returns>
+ BOOL MouseMaruClick(MARU circle, int MOUSE_INPUT_)
+ {
+     //点と四角の当たり判定
+     if (CheckColliPointToMaru(mouse.Point, circle) == TRUE)
+     {
+         //マウスをクリックしているか？
+         return MouseClick(MOUSE_INPUT_);
+     }
+
+     return FALSE;
+ }

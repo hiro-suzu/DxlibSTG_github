@@ -33,4 +33,4 @@ extern BOOL MouseClick(int MOUSE_INPUT_);		                    //ƒ}ƒEƒX‚ğƒNƒŠƒbƒ
 extern VOID MouseDraw(VOID);		                                //ƒ}ƒEƒX‚Ìî•ñ‚ğ•`‰æ‚·‚é
 
 extern BOOL MouseRectClick(RECT rect, int MOUSE_INPUT_);		    //ƒ}ƒEƒX‚ª’ZŒ`—Ìˆæ‚ğƒNƒŠƒbƒN‚µ‚½‚©
-extern BOOL MouseMaruClick(MARU rect,int MOUSE_INPUT_);		        //ƒ}ƒEƒX‚ª‰~—Ìˆæ‚ğƒNƒŠƒbƒN‚µ‚½‚©
+extern BOOL MouseMaruClick(MARU circle,int MOUSE_INPUT_);		        //ƒ}ƒEƒX‚ª‰~—Ìˆæ‚ğƒNƒŠƒbƒN‚µ‚½‚©
