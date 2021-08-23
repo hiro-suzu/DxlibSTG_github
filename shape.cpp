@@ -83,3 +83,48 @@ BOOL CheckCollMaruToMaru(MARU maru1, MARU maru2)
 	}
 	return FALSE;
 }
+
+/// <summary>
+/// RECTŒ^‚ğˆê“I‚É“n‚·
+/// </summary>
+/// <param name="left">¶</param>
+/// <param name="top">ã</param>
+/// <param name="right">‰E</param>
+/// <param name="bottom">‰º</param>
+/// <returns></returns>
+RECT GetRect(int left, int top, int right, int bottom)
+{
+	//ˆê“I‚ÉRECTŒ^‚Ì•Ï”‚ğì‚Á‚Ä
+	RECT rect = { left,top,right,bottom };
+
+	return rect;
+}
+
+/// <summary>
+/// RECT‚ğ—˜—p‚µ‚Ä‘Ši‚ğ•`‰æ
+/// </summary>
+/// <param name="r">RECT\‘¢‘Ì</param>
+/// <param name="color">•`‰æ‚·‚éF</param>
+/// <param name="b">’†‚ğ“h‚è‚Â‚Ô‚³‚È‚¢‚È‚çFALSE/“h‚è‚Â‚Ô‚·‚È‚çTRUE</param>
+/// <returns></returns>
+void DrawRect(RECT r, unsigned int color, bool b)
+{
+	//ˆø”‚ğ‚à‚Æ‚É•`‰æ
+	DrawBox(r.left, r.top, r.right, r.bottom, color, b);
+	return;
+}
+
+///<summary>
+/// MARU‚ğ—˜—p‚µ‚Ä‘Ši‚ğ•`‰æ
+/// </summary>
+/// <param name="r">MARU\‘¢‘Ì</param>
+/// <param name="color">•`‰æ‚·‚éF</param>
+/// <param name="b">’†‚ğ“h‚è‚Â‚Ô‚³‚È‚¢‚È‚çFALSE/“h‚è‚Â‚Ô‚·‚È‚çTRUE</param>
+/// <param name="thick">æ‚Ì‘¾‚³</param>
+/// <returns></returns>
+VOID DrawMaru(MARU c, unsigned int color, bool b, int thick)
+{
+	//ˆø”‚ğ‚à‚Æ‚É•`‰æ
+	DrawCircle(c.center.x, c.center.y, c.radius, color, b, thick);
+	return;
+}

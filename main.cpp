@@ -102,6 +102,11 @@ GAME_SCENE GameScene;		//現在のゲームのシーン
 GAME_SCENE OldGameScene;	//前回のゲームのシーン
 GAME_SCENE NextGameScene;	//次のゲームのシーン
 
+//音楽
+AUDIO TitleBGM;
+AUDIO PlayBGM;
+AUDIO EndBGM;
+
 //画面の切り替え
 BOOL IsFadeOut = FALSE;		//フェードアウト
 BOOL IsFadeIn = FALSE;		//フェードイン
@@ -321,6 +326,10 @@ int WINAPI WinMain(
 		DeleteGraph(teki_moto[i].img.handle);
 	}
 
+	DeleteSoundMem(TitleBGM.handle);  //メモリ上から削除
+	DeleteSoundMem(PlayBGM.handle);  //メモリ上から削除
+	DeleteSoundMem(EndBGM.handle);  //メモリ上から削除
+
 	//ＤＸライブラリ使用の終了処理
 	DxLib_End();
 
@@ -396,6 +405,10 @@ BOOL GameLoad(VOID)
 		CollUpdatePlayer(&teki_moto[i]);	//当たり判定の更新
 		teki_moto[i].img.IsDraw = FALSE;	//描画しません
 	}
+
+	if (!LoadAudio(&TitleBGM, ".\\Audio\\魔王魂  8bit16.mp3", 255, DX_PLAYTYPE_LOOP)) { return FALSE; }
+	if (!LoadAudio(&PlayBGM, ".\\Audio\\midnightmoon.mp3", 255, DX_PLAYTYPE_LOOP)) { return FALSE; }
+	if (!LoadAudio(&EndBGM, ".\\Audio\\魔王魂  ヒーリング13.mp3", 255, DX_PLAYTYPE_LOOP)) { return FALSE; }
 
 	return TRUE;	//全て読み込みた！
 }
@@ -596,6 +609,9 @@ VOID TitleProc(VOID)
 
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
+        //BGMを止める
+		StopSoundMem(TitleBGM.handle);
+
 		//シーン切り替え
 		//次のシーンの初期化をここで行うと楽
 
@@ -609,6 +625,13 @@ VOID TitleProc(VOID)
 		SetMouseDispFlag(FALSE);
 
 		return;
+	}
+
+	//BGMが流れていないとき
+	if (CheckSoundMem(TitleBGM.handle) == 0)
+	{
+		//BGMを流す
+		PlaySoundMem(TitleBGM.handle, TitleBGM.playType);
 	}
 
 	return;
@@ -678,6 +701,10 @@ VOID PlayProc(VOID)
 {
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
+
+		//BGMを止める
+		StopSoundMem(PlayBGM.handle);
+
 		//プレイ画面に切り替え
 		ChangeScene(GAME_SCENE_END);
 
@@ -686,6 +713,8 @@ VOID PlayProc(VOID)
 
 		return;
 	}
+
+	
 
 	/*プレイヤーを操作する
 	if (KeyDown(KEY_INPUT_LEFT) == TRUE)
@@ -886,6 +915,13 @@ VOID PlayProc(VOID)
 		}
 	}
 
+	//BGMが流れていないとき
+	if (CheckSoundMem(PlayBGM.handle) == 0)
+	{
+		//BGMを流す
+		PlaySoundMem(PlayBGM.handle, TitleBGM.playType);
+	}
+
 	return;
 }
 
@@ -1031,10 +1067,20 @@ VOID EndProc(VOID)
 {
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
+		//BGMを止める
+		StopSoundMem(EndBGM.handle);
+
 		//タイトル画面に切り替え
 		ChangeScene(GAME_SCENE_TITLE);
 
 		return;
+	}
+
+	//BGMが流れていないとき
+	if (CheckSoundMem(EndBGM.handle) == 0)
+	{
+		//BGMを流す
+		PlaySoundMem(EndBGM.handle, EndBGM.playType);
 	}
 
 	return;
