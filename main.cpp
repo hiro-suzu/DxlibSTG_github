@@ -102,10 +102,19 @@ GAME_SCENE GameScene;		//現在のゲームのシーン
 GAME_SCENE OldGameScene;	//前回のゲームのシーン
 GAME_SCENE NextGameScene;	//次のゲームのシーン
 
+//背景の動画
+MOVIE titleMovie;
+MOVIE endMovie;
+
 //音楽
 AUDIO TitleBGM;
 AUDIO PlayBGM;
 AUDIO EndBGM;
+
+//画像を読み込む
+IMAGE TitleLogo;  //タイトルロゴ
+IMAGE TitleEnter; //エンターキー
+IMAGE EndClear;   //クリアロゴ
 
 //画面の切り替え
 BOOL IsFadeOut = FALSE;		//フェードアウト
@@ -123,6 +132,11 @@ int fadeOutCntMax = fadeTimeMax;	//フェードアウトのカウンタMAX
 int fadeInCntInit = fadeTimeMax;	//初期値
 int fadeInCnt = fadeInCntInit;		//フェードアウトのカウンタ
 int fadeInCntMax = fadeTimeMax;		//フェードアウトのカウンタMAX
+
+//PushEnterの点滅
+int PushEnterCnt = 0;         //カウンタ
+int PushEnterCntMAX = 30;     //カウンタMAX値
+BOOL PushEnterBrink = FALSE;  //点滅しているか
 
 //弾の構造体
 struct TAMA tama_moto;		//元
@@ -326,6 +340,14 @@ int WINAPI WinMain(
 		DeleteGraph(teki_moto[i].img.handle);
 	}
 
+	//終わるときの処理
+	DeleteGraph(titleMovie.handle);  //メモリ上から削除
+	DeleteGraph(endMovie.handle);  //メモリ上から削除
+
+	DeleteGraph(TitleLogo.handle);  //メモリ上から削除
+	DeleteGraph(TitleEnter.handle);  //メモリ上から削除
+	DeleteGraph(EndClear.handle);  //メモリ上から削除
+
 	DeleteSoundMem(TitleBGM.handle);  //メモリ上から削除
 	DeleteSoundMem(PlayBGM.handle);  //メモリ上から削除
 	DeleteSoundMem(EndBGM.handle);  //メモリ上から削除
@@ -342,6 +364,53 @@ int WINAPI WinMain(
 /// <returns>読み込めたらTRUE / 読み込めなかったらFALSE</returns>
 BOOL GameLoad(VOID)
 {
+
+	//動画の背景を読み込み
+	strcpyDx(titleMovie.path, ".\\Movie\\Jet - 33479.mp4");
+	titleMovie.handle = LoadGraph(titleMovie.path);
+
+	//動画が読み込めなかったときは、エラー（－1）が入る
+	if (titleMovie.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),
+			titleMovie.path,
+			"動画読み込みエラー！",
+			MB_OK
+		);
+
+		return FALSE;  //読み込み失敗
+	}
+
+	//画像の幅と高さを取得
+	GetGraphSize(titleMovie.handle, &titleMovie.width, &titleMovie.height);
+
+	//動画のボリューム
+	titleMovie.Volume = 255;
+
+	//動画の背景を読み込み
+	strcpyDx(endMovie.path, ".\\Movie\\Jet - 33479.mp4");
+	endMovie.handle = LoadGraph(endMovie.path);
+
+	//動画が読み込めなかったときは、エラー（－1）が入る
+	if (endMovie.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),
+			endMovie.path,
+			"動画読み込みエラー！",
+			MB_OK
+		);
+
+		return FALSE;  //読み込み失敗
+	}
+
+	//画像の幅と高さを取得
+	GetGraphSize(endMovie.handle, &endMovie.width, &endMovie.height);
+
+	//動画のボリューム
+	endMovie.Volume = 255;
+
 	//弾の分割数を設定
 	tama_moto.DivYoko = 4;
 	tama_moto.DivTate = 1;
@@ -405,6 +474,10 @@ BOOL GameLoad(VOID)
 		CollUpdatePlayer(&teki_moto[i]);	//当たり判定の更新
 		teki_moto[i].img.IsDraw = FALSE;	//描画しません
 	}
+
+	if (!LoadImageMem(&TitleLogo, ".\\Image\\タイトルロゴ.png")) { return FALSE; }
+	if (!LoadImageMem(&TitleEnter, ".\\Image\\push enter.png")) { return FALSE; }
+	if (!LoadImageMem(&EndClear, ".\\Image\\クリアロゴ.png")) { return FALSE; }
 
 	if (!LoadAudio(&TitleBGM, ".\\Audio\\魔王魂  8bit16.mp3", 255, DX_PLAYTYPE_LOOP)) { return FALSE; }
 	if (!LoadAudio(&PlayBGM, ".\\Audio\\midnightmoon.mp3", 255, DX_PLAYTYPE_LOOP)) { return FALSE; }
@@ -575,6 +648,23 @@ VOID GameInit(VOID)
 		teki_moto[i].img.IsDraw = FALSE;	//描画しません
 	}
 
+	//タイトルロゴの位置を決める
+	TitleLogo.x = GAME_WIDTH / 2 - TitleLogo.width / 2; //中央ぞろえ
+	TitleLogo.y = 100;
+
+	//PushEnterの位置を決める
+	TitleEnter.x = GAME_WIDTH / 2 - TitleEnter.width / 2; //中央ぞろえ
+	TitleEnter.y = GAME_HEIGHT - TitleEnter.height - 100;
+	
+	//PushEnterの点滅
+	 PushEnterCnt = 0;         //カウンタ
+	 PushEnterCntMAX = 60;     //カウンタMAX値
+	 PushEnterBrink = FALSE;  //点滅しているか
+
+	//クリアロゴの位置を決める
+	EndClear.x = GAME_WIDTH / 2 - EndClear.width / 2; //中央ぞろえ
+	EndClear.y = GAME_HEIGHT / 2 - EndClear.height / 2; //中央ぞろえ
+
 }
 
 /// <summary>
@@ -643,7 +733,44 @@ VOID TitleProc(VOID)
 VOID TitleDraw(VOID)
 {
 
+	
 
+	//背景動画を描画
+
+	//もし、動画が再生されていないとき
+	if (GetMovieStateToGraph(titleMovie.handle) == 0)
+	{
+		//再生する
+		SeekMovieToGraph(titleMovie.handle, 0);
+		PlayMovieToGraph(titleMovie.handle);
+	}
+	
+	//動画を描画（画像を引き延ばす）
+	DrawExtendGraph(0, 0, GAME_WIDTH, GAME_HEIGHT, titleMovie.handle, TRUE);
+
+	//タイトルロゴの描画
+	DrawGraph(TitleLogo.x, TitleLogo.y, TitleLogo.handle, TRUE);
+
+	//MAX値まで待つ
+	if (PushEnterCnt < PushEnterCntMAX) { PushEnterCnt++; }
+	else
+	{
+		if (PushEnterBrink == TRUE)PushEnterBrink = FALSE;
+		else if (PushEnterBrink == FALSE)PushEnterBrink = TRUE;
+
+		PushEnterCnt = 0;  //カウンタを初期化
+	}
+	if (PushEnterBrink == TRUE)
+	{
+		//半透明にする
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, ((float)(PushEnterCntMAX - PushEnterCnt) / PushEnterCntMAX) * 255);
+
+		//PushEnterの描画
+		DrawGraph(TitleEnter.x, TitleEnter.y, TitleEnter.handle, TRUE);
+
+		//半透明終了
+		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+	}
 
 	DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
 	return;
@@ -1091,6 +1218,25 @@ VOID EndProc(VOID)
 /// </summary>
 VOID EndDraw(VOID)
 {
+
+	
+	//背景動画を描画
+
+	//もし、動画が再生されていないとき
+	if (GetMovieStateToGraph(endMovie.handle) == 0)
+	{
+		//再生する
+		SeekMovieToGraph(endMovie.handle, 0);
+		PlayMovieToGraph(endMovie.handle);
+	}
+
+	//動画を描画（画像を引き延ばす）
+	DrawExtendGraph(0, 0, GAME_WIDTH, GAME_HEIGHT, endMovie.handle, TRUE);
+
+	//クリアロゴの描画
+	DrawGraph(EndClear.x, EndClear.y, EndClear.handle, TRUE);
+
+
 	DrawString(0, 0, "エンド画面", GetColor(0, 0, 0));
 	return;
 }
